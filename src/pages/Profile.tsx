@@ -181,3 +181,13 @@ function Stat({ icon: Icon, label, value, tone }: any) {
     </div>
   );
 }
+
+function ImpactStat({ icon: Icon, value, label }: { icon: any; value: number; label: string }) {
+  return (
+    <div className="rounded-xl bg-white/15 backdrop-blur border border-white/20 p-2.5 text-center">
+      <Icon className="h-4 w-4 mx-auto opacity-90" />
+      <p className="mt-1 text-base font-extrabold leading-none">{value}</p>
+      <p className="text-[10px] opacity-85 mt-1 leading-tight">{label}</p>
+    </div>
+  );
+}
