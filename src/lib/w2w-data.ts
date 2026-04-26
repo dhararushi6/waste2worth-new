@@ -45,6 +45,17 @@ export const rewardCategories = [
 ];
 
 export const rewards = [
+  // ✨ Eco-Experiences — adventures unlocked by recycling
+  { id: 1001, cat: "experiences", name: "Sunrise Trek to Nandi Hills", cost: 1800, emoji: "🌄", tag: "ADVENTURE" },
+  { id: 1002, cat: "experiences", name: "Sunburn Festival Pass", cost: 4500, emoji: "🎵", tag: "LEGENDARY" },
+  { id: 1003, cat: "experiences", name: "Skydiving 20% Off", cost: 2200, emoji: "🪂", tag: "RUSH" },
+  { id: 1004, cat: "experiences", name: "Scuba Dive in Goa", cost: 3000, emoji: "🤿", tag: "OCEAN" },
+  { id: 1005, cat: "experiences", name: "AR Campus Treasure Hunt", cost: 400, emoji: "🗺️", tag: "EXCLUSIVE" },
+  { id: 1006, cat: "experiences", name: "Offset 1 Domestic Flight", cost: 1500, emoji: "✈️", tag: "PLANET+" },
+  { id: 1007, cat: "experiences", name: "Coffee with a Startup Founder", cost: 1200, emoji: "☕", tag: "MENTOR" },
+  { id: 1008, cat: "experiences", name: "Stargazing Night at Coorg", cost: 2500, emoji: "🔭", tag: "DREAMY" },
+  { id: 1009, cat: "experiences", name: "Pottery Workshop", cost: 700, emoji: "🏺", tag: "CHILL" },
+  { id: 1010, cat: "experiences", name: "Esports Tournament Slot", cost: 900, emoji: "🎮", tag: "COMPETE" },
   // Vouchers
   { id: 101, cat: "vouchers", name: "Amazon ₹100 Voucher", cost: 950, emoji: "🛒" },
   { id: 102, cat: "vouchers", name: "Flipkart ₹50 Voucher", cost: 480, emoji: "🛍️" },
@@ -61,12 +72,6 @@ export const rewards = [
   { id: 302, cat: "subs", name: "Netflix Mobile 1-Month", cost: 1400, emoji: "🎞️" },
   { id: 303, cat: "subs", name: "JioCinema Premium", cost: 800, emoji: "📺" },
   { id: 304, cat: "subs", name: "Audible 1-Month", cost: 1200, emoji: "🎙️" },
-  // Campus Perks
-  { id: 5, cat: "campus", name: "Front-row Concert Seat", cost: 850, emoji: "🎤" },
-  { id: 6, cat: "campus", name: "Library Late Pass", cost: 120, emoji: "📚" },
-  { id: 401, cat: "campus", name: "Gym Day Pass", cost: 180, emoji: "🏋️" },
-  { id: 402, cat: "campus", name: "Fest Backstage Access", cost: 1500, emoji: "🎟️" },
-  { id: 403, cat: "campus", name: "Priority Hostel Laundry", cost: 220, emoji: "🧺" },
   // Travel & Rides
   { id: 501, cat: "travel", name: "Uber ₹100 Voucher", cost: 950, emoji: "🚗" },
   { id: 502, cat: "travel", name: "Rapido 5 Free Rides", cost: 1100, emoji: "🛵" },
