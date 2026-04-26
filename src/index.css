@@ -87,7 +87,7 @@
 
   /* Mobile shell — phone frame on desktop, full width on mobile */
   .app-shell {
-    @apply mx-auto w-full max-w-[440px] min-h-screen relative bg-background;
+    @apply mx-auto w-full max-w-[440px] min-h-screen relative bg-background overflow-x-hidden;
   }
 
   .ticker-track {
