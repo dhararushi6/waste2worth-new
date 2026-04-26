@@ -64,37 +64,72 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Leaderboard */}
+      {/* Weekly Eco-Quests */}
       <section className="px-5 mt-6">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-bold flex items-center gap-1.5"><Trophy className="h-4 w-4 text-gold" /> Leaderboard</h2>
-          <div className="flex bg-muted rounded-full p-0.5">
-            {[
-              { id: "hostel", label: "Hostels" },
-              { id: "dept", label: "Depts" },
-            ].map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setBoard(t.id as any)}
-                className={cn("px-3 py-1 rounded-full text-[11px] font-bold", board === t.id ? "bg-card shadow-card text-foreground" : "text-muted-foreground")}
-              >{t.label}</button>
-            ))}
-          </div>
+          <h2 className="text-sm font-bold flex items-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-gold" /> Weekly Eco-Quests
+          </h2>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground bg-muted rounded-full px-2 py-0.5">
+            Resets in 3d
+          </span>
         </div>
-        <div className="rounded-2xl bg-card border border-border shadow-card overflow-hidden">
-          {list.map((r, i) => {
-            const isMe = r.name === myName;
+        <div className="space-y-2.5">
+          {quests.map((q) => {
+            const pct = Math.min(100, (q.progress / q.total) * 100);
+            const done = pct >= 100;
             return (
-              <div key={r.name} className={cn("flex items-center gap-3 px-4 py-3 border-b border-border last:border-0", isMe && "bg-primary/10")}>
-                <span className={cn(
-                  "h-7 w-7 rounded-full flex items-center justify-center text-xs font-extrabold",
-                  i === 0 ? "bg-gold text-gold-foreground" : i === 1 ? "bg-secondary text-foreground" : "bg-muted text-muted-foreground"
-                )}>{i + 1}</span>
-                <p className={cn("flex-1 text-sm font-semibold", isMe && "text-primary")}>{r.name}{isMe && " · you"}</p>
-                <p className="text-sm font-extrabold">{r.kg} kg</p>
+              <div key={q.id} className="rounded-2xl bg-card border border-border p-3.5 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="h-11 w-11 rounded-xl bg-card-muted border border-border flex items-center justify-center text-xl">
+                    {q.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold truncate">{q.title}</p>
+                      <span className="shrink-0 text-[11px] font-extrabold text-primary bg-primary/15 rounded-full px-2 py-0.5">
+                        +{q.reward}
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div className={cn("h-full rounded-full", done ? "bg-primary" : "gradient-hero")} style={{ width: `${pct}%` }} />
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground font-semibold">
+                      {done ? <span className="text-primary inline-flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Complete · tap to claim</span> : `${q.progress} / ${q.total}`}
+                    </p>
+                  </div>
+                </div>
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Real-world Impact */}
+      <section className="px-5 mt-6">
+        <h2 className="text-sm font-bold mb-2 flex items-center gap-1.5">
+          <Sparkles className="h-4 w-4 text-primary" /> Your Impact, in real things
+        </h2>
+        <div className="rounded-2xl overflow-hidden border border-border shadow-card relative bg-gradient-to-br from-primary via-olive to-deep-blue text-primary-foreground">
+          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative p-5">
+            <p className="text-[11px] uppercase tracking-wider font-bold opacity-80">You've recycled</p>
+            <p className="text-3xl font-extrabold">{totalKg} kg</p>
+            <p className="text-xs opacity-85 mt-0.5">That's the same as…</p>
+
+            <div className="mt-4 grid grid-cols-3 gap-2">
+              <ImpactStat icon={Smartphone} value={phoneCharges} label="phone charges" />
+              <ImpactStat icon={Droplets} value={litersWater} label="L of water" />
+              <ImpactStat icon={Zap} value={bulbHours} label="bulb hours" />
+            </div>
+
+            <button
+              onClick={() => toast.success("Story image saved — share with friends!")}
+              className="mt-4 w-full rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur py-2.5 text-xs font-bold inline-flex items-center justify-center gap-1.5 border border-white/20"
+            >
+              <Share2 className="h-3.5 w-3.5" /> Share my impact story
+            </button>
+          </div>
         </div>
       </section>
 
