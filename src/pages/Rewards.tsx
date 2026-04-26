@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default function Rewards() {
   const coins = useW2W((s) => s.coins);
-  const [cat, setCat] = useState("vouchers");
+  const [cat, setCat] = useState("experiences");
   const [confirm, setConfirm] = useState<typeof rewards[number] | null>(null);
   const [coupon, setCoupon] = useState<{ name: string; code: string } | null>(null);
 
@@ -66,30 +66,74 @@ export default function Rewards() {
         </div>
       </div>
 
-      {/* Reward grid */}
-      <section className="px-5 mt-4 grid grid-cols-2 gap-3">
-        {list.map((r) => {
-          const affordable = coins >= r.cost;
-          return (
-            <div key={r.id} className="rounded-2xl bg-card border border-border p-3 shadow-card flex flex-col">
-              <div className="aspect-square rounded-xl bg-card-muted flex items-center justify-center text-5xl">
-                {r.emoji}
+      {/* Reward grid — Eco-Experiences get a premium full-width treatment */}
+      {cat === "experiences" ? (
+        <section className="px-5 mt-4 space-y-3">
+          <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-gold/10 to-deep-blue/10 border border-border p-3 flex items-start gap-3">
+            <span className="text-xl">✨</span>
+            <p className="text-xs text-foreground/80 leading-relaxed">
+              <span className="font-bold text-foreground">Eco-Experiences</span> turn your recycling into real-life adventures — only unlockable here. Limited slots every week.
+            </p>
+          </div>
+          {list.map((r: any) => {
+            const affordable = coins >= r.cost;
+            return (
+              <div key={r.id} className="relative rounded-2xl overflow-hidden border border-border shadow-card bg-card">
+                <div className="flex">
+                  <div className="w-24 shrink-0 bg-gradient-to-br from-primary via-olive to-deep-blue flex items-center justify-center text-5xl">
+                    {r.emoji}
+                  </div>
+                  <div className="flex-1 p-3.5 min-w-0">
+                    {r.tag && (
+                      <span className="inline-block text-[9px] font-extrabold tracking-widest uppercase text-gold-foreground bg-gold rounded-full px-2 py-0.5 mb-1">
+                        {r.tag}
+                      </span>
+                    )}
+                    <p className="text-sm font-extrabold leading-tight">{r.name}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <p className="text-xs font-bold text-primary inline-flex items-center gap-1">
+                        <Coins className="h-3.5 w-3.5" /> {r.cost.toLocaleString()} W2W
+                      </p>
+                      <Button
+                        disabled={!affordable}
+                        onClick={() => setConfirm(r)}
+                        size="sm"
+                        className="h-8 rounded-lg bg-foreground text-background hover:bg-foreground/90 font-bold text-[11px] px-3 disabled:opacity-40"
+                      >
+                        {affordable ? "Unlock" : `Need ${(r.cost - coins).toLocaleString()}`}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="mt-2.5 text-sm font-bold leading-tight">{r.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1">
-                <Coins className="h-3 w-3 text-primary" /> {r.cost} W2W
-              </p>
-              <Button
-                disabled={!affordable}
-                onClick={() => setConfirm(r)}
-                className="mt-2.5 h-9 rounded-lg bg-gold text-gold-foreground hover:bg-gold/90 font-bold text-xs disabled:opacity-50"
-              >
-                {affordable ? "Redeem" : "Need more"}
-              </Button>
-            </div>
-          );
-        })}
-      </section>
+            );
+          })}
+        </section>
+      ) : (
+        <section className="px-5 mt-4 grid grid-cols-2 gap-3">
+          {list.map((r) => {
+            const affordable = coins >= r.cost;
+            return (
+              <div key={r.id} className="rounded-2xl bg-card border border-border p-3 shadow-card flex flex-col">
+                <div className="aspect-square rounded-xl bg-card-muted flex items-center justify-center text-5xl">
+                  {r.emoji}
+                </div>
+                <p className="mt-2.5 text-sm font-bold leading-tight">{r.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1">
+                  <Coins className="h-3 w-3 text-primary" /> {r.cost} W2W
+                </p>
+                <Button
+                  disabled={!affordable}
+                  onClick={() => setConfirm(r)}
+                  className="mt-2.5 h-9 rounded-lg bg-gold text-gold-foreground hover:bg-gold/90 font-bold text-xs disabled:opacity-50"
+                >
+                  {affordable ? "Redeem" : "Need more"}
+                </Button>
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       {/* Confirm dialog */}
       <Dialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
