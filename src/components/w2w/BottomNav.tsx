@@ -24,18 +24,18 @@ export default function BottomNav() {
 
   return (
     <>
-      {/* FAB radial menu */}
       {fabOpen && (
         <button
           aria-label="Close menu"
           onClick={() => setFabOpen(false)}
-          className="fixed inset-0 z-30 bg-foreground/30 backdrop-blur-sm app-shell !min-h-0 !h-full"
+          className="fixed inset-0 z-30 bg-foreground/40 backdrop-blur-sm"
         />
       )}
+
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[440px]">
-        {/* FAB action buttons */}
+        {/* FAB action menu */}
         <div className={cn(
-          "absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-all",
+          "absolute right-5 bottom-28 flex flex-col items-end gap-2.5 transition-all",
           fabOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-4 pointer-events-none"
         )}>
           {fabActions.map((a, i) => (
@@ -52,42 +52,40 @@ export default function BottomNav() {
         </div>
 
         {/* Bottom Nav */}
-        <nav className="pointer-events-auto mx-3 mb-3 rounded-2xl bg-card shadow-elevated border border-border px-2 py-2 flex items-center justify-between">
-          {tabs.slice(0, 2).map((t) => <NavBtn key={t.to} {...t} active={pathname === t.to} onClick={() => navigate(t.to)} />)}
-          <div className="w-14" /> {/* FAB spacer */}
-          {tabs.slice(3).map((t) => <NavBtn key={t.to} {...t} active={pathname === t.to} onClick={() => navigate(t.to)} />)}
+        <nav className="pointer-events-auto mx-3 mb-3 rounded-2xl bg-card shadow-elevated border border-border px-1.5 py-1.5 flex items-center justify-between">
+          {tabs.map((t) => (
+            <NavBtn key={t.to} {...t} active={pathname === t.to} onClick={() => navigate(t.to)} />
+          ))}
         </nav>
 
-        {/* FAB */}
+        {/* FAB — bottom right */}
         <button
           onClick={() => setFabOpen((v) => !v)}
           aria-label="Quick actions"
           className={cn(
-            "pointer-events-auto absolute left-1/2 -translate-x-1/2 bottom-7",
-            "h-16 w-16 rounded-full gradient-fab shadow-fab text-white",
+            "pointer-events-auto absolute right-5 bottom-20",
+            "h-14 w-14 rounded-full gradient-fab shadow-fab text-white",
             "flex items-center justify-center transition-transform",
             fabOpen && "rotate-45"
           )}
         >
-          {fabOpen ? <X className="h-7 w-7" /> : <Plus className="h-7 w-7" />}
+          {fabOpen ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}
         </button>
-
-        {/* Map tab (under FAB area) — render as small label centered? Actually just include /map as a side icon: */}
       </div>
     </>
   );
 }
 
-function NavBtn({ to, label, icon: Icon, active, onClick }: any) {
+function NavBtn({ label, icon: Icon, active, onClick }: any) {
   return (
     <button
       onClick={onClick}
       className={cn(
-        "flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl transition-colors",
-        active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+        "flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl transition-colors",
+        active ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
       )}
     >
-      <Icon className={cn("h-5 w-5", active && "fill-primary/15")} strokeWidth={active ? 2.4 : 1.8} />
+      <Icon className="h-5 w-5" strokeWidth={active ? 2.4 : 1.8} />
       <span className="text-[10px] font-semibold tracking-wide">{label}</span>
     </button>
   );
