@@ -1,7 +1,6 @@
-import { useState } from "react";
 import AppShell from "@/components/w2w/AppShell";
-import { user, badges, leaderboardHostels, leaderboardDepts } from "@/lib/w2w-data";
-import { Settings, Bell, Shield, Share2, IdCard, Leaf, TreeDeciduous, Cloud, Flame, Trophy, ChevronRight } from "lucide-react";
+import { user, badges } from "@/lib/w2w-data";
+import { Settings, Bell, Shield, Share2, IdCard, Leaf, TreeDeciduous, Cloud, Flame, ChevronRight, Sparkles, Zap, Droplets, Smartphone, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useW2W, w2wStore } from "@/store/w2w-store";
 import { useNavigate } from "react-router-dom";
@@ -9,10 +8,18 @@ import { toast } from "sonner";
 
 export default function Profile() {
   const totalKg = useW2W((s) => s.totalKg);
-  const [board, setBoard] = useState<"hostel" | "dept">("hostel");
   const navigate = useNavigate();
-  const list = board === "hostel" ? leaderboardHostels : leaderboardDepts;
-  const myName = board === "hostel" ? user.hostel : user.department;
+
+  // Real-world impact translations
+  const phoneCharges = Math.round(totalKg * 18);
+  const litersWater = Math.round(totalKg * 42);
+  const bulbHours = Math.round(totalKg * 27);
+
+  const quests = [
+    { id: 1, title: "Scan 5 e-waste items", reward: 80, progress: 3, total: 5, icon: "📱" },
+    { id: 2, title: "Visit 3 different kiosks", reward: 60, progress: 2, total: 3, icon: "📍" },
+    { id: 3, title: "Recycle 5 kg this week", reward: 120, progress: 3.2, total: 5, icon: "♻️" },
+  ];
 
   return (
     <AppShell>
