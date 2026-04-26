@@ -34,10 +34,10 @@ export const kiosks = [
 ];
 
 export const rewardCategories = [
+  { id: "experiences", label: "Eco-Experiences ✨" },
   { id: "vouchers", label: "Vouchers" },
   { id: "recharge", label: "Recharge & Bills" },
   { id: "subs", label: "Subscriptions" },
-  { id: "campus", label: "Campus Perks" },
   { id: "travel", label: "Travel & Rides" },
   { id: "swag", label: "Eco Swag" },
   { id: "donate", label: "Donate" },
