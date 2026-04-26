@@ -54,7 +54,7 @@ export default function Pickup() {
 
         <Button
           onClick={() => { toast.success("Pickup request confirmed!"); navigate("/home"); }}
-          className="w-full h-13 py-3.5 rounded-2xl bg-olive text-olive-foreground hover:bg-olive/90 font-bold text-base"
+          className="w-full h-14 rounded-2xl bg-olive text-olive-foreground hover:bg-olive/90 font-bold text-base"
         >
           Confirm Pickup
         </Button>

@@ -60,7 +60,7 @@ export default function ReportIssue() {
 
         <Button
           onClick={() => { toast.success("Report submitted. Thank you!"); navigate("/home"); }}
-          className="w-full h-13 py-3.5 rounded-2xl bg-primary hover:bg-primary/90 font-bold text-base"
+          className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 font-bold text-base"
         >
           Submit Report
         </Button>
