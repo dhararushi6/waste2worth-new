@@ -34,18 +34,33 @@ export const kiosks = [
 ];
 
 export const rewardCategories = [
-  { id: "food", label: "Food & Chai" },
-  { id: "recharge", label: "Digital Recharge" },
+  { id: "vouchers", label: "Vouchers" },
+  { id: "recharge", label: "Recharge & Bills" },
+  { id: "subs", label: "Subscriptions" },
   { id: "campus", label: "Campus Perks" },
+  { id: "travel", label: "Travel & Rides" },
   { id: "swag", label: "Eco Swag" },
+  { id: "donate", label: "Donate" },
   { id: "mystery", label: "Mystery Box" },
 ];
 
 export const rewards = [
-  { id: 1, cat: "food", name: "Free Masala Chai", cost: 40, emoji: "☕" },
-  { id: 2, cat: "food", name: "Samosa Combo", cost: 90, emoji: "🥟" },
+  // Vouchers
+  { id: 101, cat: "vouchers", name: "Amazon ₹100 Voucher", cost: 950, emoji: "🛒" },
+  { id: 102, cat: "vouchers", name: "Flipkart ₹50 Voucher", cost: 480, emoji: "🛍️" },
+  { id: 103, cat: "vouchers", name: "Zomato ₹75 Off", cost: 720, emoji: "🍔" },
+  { id: 104, cat: "vouchers", name: "Swiggy ₹50 Off", cost: 480, emoji: "🥡" },
+  { id: 105, cat: "vouchers", name: "BookMyShow ₹150", cost: 1400, emoji: "🎬" },
+  // Recharge & Bills
   { id: 3, cat: "recharge", name: "₹20 Mobile Recharge", cost: 200, emoji: "📱" },
   { id: 4, cat: "recharge", name: "₹50 Recharge", cost: 480, emoji: "💸" },
+  { id: 201, cat: "recharge", name: "₹100 Data Pack", cost: 950, emoji: "📶" },
+  { id: 202, cat: "recharge", name: "Electricity Bill ₹200", cost: 1900, emoji: "💡" },
+  // Subscriptions
+  { id: 301, cat: "subs", name: "Spotify 1-Month", cost: 1100, emoji: "🎧" },
+  { id: 302, cat: "subs", name: "Netflix Mobile 1-Month", cost: 1400, emoji: "🎞️" },
+  { id: 303, cat: "subs", name: "JioCinema Premium", cost: 800, emoji: "📺" },
+  { id: 304, cat: "subs", name: "Audible 1-Month", cost: 1200, emoji: "🎙️" },
   { id: 5, cat: "campus", name: "Front-row Concert Seat", cost: 850, emoji: "🎤" },
   { id: 6, cat: "campus", name: "Library Late Pass", cost: 120, emoji: "📚" },
   { id: 7, cat: "swag", name: "Eco Tote Bag", cost: 350, emoji: "👜" },
