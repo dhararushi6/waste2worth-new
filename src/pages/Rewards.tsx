@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export default function Rewards() {
   const coins = useW2W((s) => s.coins);
-  const [cat, setCat] = useState("vouchers");
+  const [cat, setCat] = useState("experiences");
   const [confirm, setConfirm] = useState<typeof rewards[number] | null>(null);
   const [coupon, setCoupon] = useState<{ name: string; code: string } | null>(null);
 
