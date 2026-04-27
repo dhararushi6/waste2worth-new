@@ -8,6 +8,8 @@ import { toast } from "sonner";
 
 export default function Profile() {
   const totalKg = useW2W((s) => s.totalKg);
+  const name = useW2W((s) => s.name);
+  const city = useW2W((s) => s.city);
   const navigate = useNavigate();
 
   // Real-world impact translations
