@@ -2,8 +2,7 @@
 
 export const user = {
   name: "Aarav",
-  hostel: "Tagore Hostel",
-  department: "CSE",
+  city: "Bengaluru",
   coins: 1240,
   studentId: "21CS1042",
   streak: 12,
@@ -23,7 +22,7 @@ export const scrapRates = [
 export const recentActivity = [
   { id: 1, title: "Mobile Phone scan", subtitle: "E-waste · 0.18 kg", coins: 72, when: "2h ago" },
   { id: 2, title: "Plastic bottles deposit", subtitle: "Kiosk · Block C", coins: 24, when: "Yesterday" },
-  { id: 3, title: "Paper bundle pickup", subtitle: "Hostel · 1.2 kg", coins: 12, when: "2 days ago" },
+  { id: 3, title: "Paper bundle pickup", subtitle: "Home pickup · 1.2 kg", coins: 12, when: "2 days ago" },
 ];
 
 export const kiosks = [
@@ -95,8 +94,8 @@ export const rewards = [
 ];
 
 export const challenges = {
-  title: "Hostel League",
-  body: "Your hostel is #2 — recycle 5 kg more to win!",
+  title: "City Climate Quest",
+  body: "Bengaluru recyclers need 5 kg more to unlock a community tree-planting drive.",
   progress: 64,
 };
 
@@ -120,16 +119,16 @@ export const badges = [
   { id: 6, name: "Streak 30", emoji: "🔥", earned: false },
 ];
 
-export const leaderboardHostels = [
-  { name: "Nehru Hostel", kg: 312 },
-  { name: "Tagore Hostel", kg: 284 },
-  { name: "Bose Hostel", kg: 251 },
-  { name: "Raman Hostel", kg: 198 },
+export const leaderboardCities = [
+  { name: "Mumbai", kg: 1820 },
+  { name: "Bengaluru", kg: 1644 },
+  { name: "Delhi", kg: 1502 },
+  { name: "Pune", kg: 1188 },
 ];
 
-export const leaderboardDepts = [
-  { name: "Mechanical", kg: 540 },
-  { name: "CSE", kg: 488 },
-  { name: "ECE", kg: 412 },
-  { name: "Civil", kg: 380 },
+export const leaderboardFriends = [
+  { name: "Aarav (You)", kg: 24.6 },
+  { name: "Priya", kg: 31.2 },
+  { name: "Rohan", kg: 18.9 },
+  { name: "Meera", kg: 14.4 },
 ];

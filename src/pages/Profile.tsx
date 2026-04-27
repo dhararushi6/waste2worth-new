@@ -30,7 +30,7 @@ export default function Profile() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-extrabold">{user.name}</h1>
-            <p className="text-xs opacity-85">{user.hostel} · {user.department}</p>
+            <p className="text-xs opacity-85">📍 {user.city}</p>
             <p className="text-[10px] opacity-75 mt-0.5">ID {user.studentId}</p>
           </div>
         </div>
