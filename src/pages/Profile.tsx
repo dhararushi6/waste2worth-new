@@ -13,6 +13,15 @@ export default function Profile() {
   const city = useW2W((s) => s.city);
   const navigate = useNavigate();
 
+  // Show one-time confirmation after signup, once the name is loaded from DB
+  const [justSaved, setJustSaved] = useState(false);
+  useEffect(() => {
+    if (sessionStorage.getItem("w2w_just_signed_up") === "1" && name) {
+      setJustSaved(true);
+      sessionStorage.removeItem("w2w_just_signed_up");
+    }
+  }, [name]);
+
   // Real-world impact translations
   const phoneCharges = Math.round(totalKg * 18);
   const litersWater = Math.round(totalKg * 42);
