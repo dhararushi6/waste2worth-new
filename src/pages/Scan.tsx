@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Sparkles, MapPin, Truck, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import CoinBadge from "@/components/w2w/CoinBadge";
 import { w2wStore } from "@/store/w2w-store";
 import { toast } from "sonner";
 
-// Portable electronic devices catalogue (avg weight kg, base ₹/device)
+// ---------- Device Catalogue ----------
 const devices = [
   { id: "phone", name: "Smartphone", emoji: "📱", weight: 0.18, base: 850 },
   { id: "feature", name: "Feature Phone", emoji: "📞", weight: 0.10, base: 220 },
@@ -33,7 +33,7 @@ const devices = [
   { id: "speaker", name: "Bluetooth Speaker", emoji: "🔊", weight: 0.40, base: 350 },
 ];
 
-// Condition tiers — multiplier applied to base value
+// Condition tiers
 const conditionFor = (v: number) => {
   if (v >= 80) return { label: "Like New", mult: 1.0, tone: "text-primary", desc: "Fully working, minimal wear" };
   if (v >= 60) return { label: "Good", mult: 0.75, tone: "text-deep-blue", desc: "Working, minor scratches" };
@@ -44,6 +44,8 @@ const conditionFor = (v: number) => {
 
 export default function Scan() {
   const navigate = useNavigate();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [deviceId, setDeviceId] = useState<string>("phone");
   const [condition, setCondition] = useState<number>(70);
   const [scanning, setScanning] = useState(false);
@@ -53,10 +55,42 @@ export default function Scan() {
   const cond = conditionFor(condition);
   const coins = Math.round(device.base * cond.mult);
 
+  // Start camera on mount
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const media = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" }
+        });
+        setStream(media);
+        if (videoRef.current) {
+          videoRef.current.srcObject = media;
+          videoRef.current.play();
+        }
+      } catch (err) {
+        toast.error("Camera permission denied");
+      }
+    };
+    startCamera();
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
   const startScan = () => {
     setScanning(true);
-    setScanned(false);
     setTimeout(() => {
+      stopCamera();
       setScanning(false);
       setScanned(true);
     }, 1600);
@@ -78,16 +112,38 @@ export default function Scan() {
       toast.error(e.message ?? "Failed to save scan");
     }
   };
+
   const pickup = () => {
     toast.success("Pickup request created");
     navigate("/pickup");
   };
 
+  const resetScan = () => {
+    setScanned(false);
+    // Restart camera
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(media => {
+        setStream(media);
+        if (videoRef.current) {
+          videoRef.current.srcObject = media;
+          videoRef.current.play();
+        }
+      })
+      .catch(() => toast.error("Could not restart camera"));
+  };
+
   return (
     <AppShell>
       {/* Camera viewfinder */}
-      <div className="relative h-[42vh] bg-foreground overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.25),transparent_70%)]" />
+      <div className="relative h-[42vh] bg-black overflow-hidden">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.2),transparent_70%)]" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative h-52 w-52">
             {[
@@ -98,9 +154,6 @@ export default function Scan() {
             ].map((c, i) => (
               <span key={i} className={`absolute h-10 w-10 border-primary ${c}`} />
             ))}
-            <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-80">
-              {device.emoji}
-            </div>
             {scanning && (
               <span
                 className="absolute left-0 right-0 h-1 bg-primary shadow-[0_0_20px_hsl(var(--primary))] animate-[scan_1.6s_ease-in-out]"
@@ -122,9 +175,11 @@ export default function Scan() {
           <div className="h-10 w-10" />
         </div>
 
-        <p className="absolute bottom-4 inset-x-0 text-center text-white/85 text-xs px-8">
-          Choose your device, set its condition, then tap to scan
-        </p>
+        {!scanned && !scanning && (
+          <p className="absolute bottom-4 inset-x-0 text-center text-white/85 text-xs px-8">
+            Point camera at device, then tap to scan
+          </p>
+        )}
       </div>
 
       {/* Controls */}
@@ -189,7 +244,7 @@ export default function Scan() {
               <Camera className="h-8 w-8 text-primary" />
             </button>
             <p className="mt-3 text-xs text-muted-foreground font-semibold">
-              {scanning ? "Analyzing with on-device AI…" : "Tap to scan & estimate value"}
+              {scanning ? "Analyzing with AI…" : "Tap to scan & estimate value"}
             </p>
           </div>
         ) : (
@@ -231,7 +286,7 @@ export default function Scan() {
             </div>
 
             <button
-              onClick={() => setScanned(false)}
+              onClick={resetScan}
               className="mt-3 w-full text-xs text-muted-foreground font-semibold py-2"
             >
               Scan another device
