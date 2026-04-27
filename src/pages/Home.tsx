@@ -11,7 +11,7 @@ export default function Home() {
   const recentList = recent.length ? recent : [
     { id: 1, title: "Mobile Phone scan", subtitle: "E-waste · 0.18 kg", coins: 72, when: "2h ago" },
     { id: 2, title: "Plastic bottles deposit", subtitle: "Kiosk · Block C", coins: 24, when: "Yesterday" },
-    { id: 3, title: "Paper bundle pickup", subtitle: "Hostel · 1.2 kg", coins: 12, when: "2 days ago" },
+    { id: 3, title: "Paper bundle pickup", subtitle: "Home pickup · 1.2 kg", coins: 12, when: "2 days ago" },
   ];
 
   const actions = [
@@ -102,7 +102,7 @@ export default function Home() {
               <div className="mt-3 h-2 rounded-full bg-card overflow-hidden">
                 <div className="h-full gradient-hero" style={{ width: `${challenges.progress}%` }} />
               </div>
-              <p className="mt-1.5 text-[11px] text-muted-foreground">{challenges.progress}% to leaderboard #1</p>
+              <p className="mt-1.5 text-[11px] text-muted-foreground">{challenges.progress}% to community goal</p>
             </div>
           </div>
         </div>
