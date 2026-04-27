@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import Auth from "./Auth";
+import Onboarding from "./Onboarding";
 import { useW2W } from "@/store/w2w-store";
 
 const Index = () => {
@@ -7,7 +7,7 @@ const Index = () => {
   const ready = useW2W((s) => s.ready);
   if (!ready) return null;
   if (authed) return <Navigate to="/home" replace />;
-  return <Auth />;
+  return <Onboarding />;
 };
 
 export default Index;
