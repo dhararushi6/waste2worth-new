@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pickups: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          slot: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          slot?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          slot?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          coins: number
+          created_at: string
+          id: string
+          name: string | null
+          total_kg: number
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          coins?: number
+          created_at?: string
+          id: string
+          name?: string | null
+          total_kg?: number
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          coins?: number
+          created_at?: string
+          id?: string
+          name?: string | null
+          total_kg?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      redemptions: {
+        Row: {
+          code: string
+          cost: number
+          created_at: string
+          id: string
+          reward_name: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          cost: number
+          created_at?: string
+          id?: string
+          reward_name: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          cost?: number
+          created_at?: string
+          id?: string
+          reward_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scans: {
+        Row: {
+          ai_notes: string | null
+          coins_earned: number
+          condition_label: string
+          condition_pct: number
+          created_at: string
+          device_id: string
+          device_name: string
+          id: string
+          user_id: string
+          weight_kg: number
+        }
+        Insert: {
+          ai_notes?: string | null
+          coins_earned: number
+          condition_label: string
+          condition_pct: number
+          created_at?: string
+          device_id: string
+          device_name: string
+          id?: string
+          user_id: string
+          weight_kg: number
+        }
+        Update: {
+          ai_notes?: string | null
+          coins_earned?: number
+          condition_label?: string
+          condition_pct?: number
+          created_at?: string
+          device_id?: string
+          device_name?: string
+          id?: string
+          user_id?: string
+          weight_kg?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
