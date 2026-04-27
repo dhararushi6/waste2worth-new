@@ -39,6 +39,7 @@ export default function Auth() {
           },
         });
         if (error) throw error;
+        sessionStorage.setItem("w2w_just_signed_up", "1");
         toast.success("Welcome to Waste2Worth!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
