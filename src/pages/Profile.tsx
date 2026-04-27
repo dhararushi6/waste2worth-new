@@ -27,12 +27,12 @@ export default function Profile() {
     <AppShell>
       <header className="bg-primary text-primary-foreground rounded-b-3xl px-5 pt-12 pb-6 shadow-card">
         <div className="flex items-center gap-4">
-          <div className="h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-extrabold">
-            {user.name[0]}
+          <div className="h-16 w-16 rounded-2xl bg-white/20 flex items-center justify-center text-2xl font-extrabold shrink-0">
+            {(name?.[0] ?? "U").toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-extrabold">{user.name}</h1>
-            <p className="text-xs opacity-85">📍 {user.city}</p>
+            <h1 className="text-lg font-extrabold truncate">{name || "Your name"}</h1>
+            <p className="text-xs opacity-85 truncate">📍 {city}</p>
             <p className="text-[10px] opacity-75 mt-0.5">ID {user.studentId}</p>
           </div>
         </div>
