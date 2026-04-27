@@ -1,13 +1,19 @@
 import { ReactNode } from "react";
 import BottomNav from "./BottomNav";
 
-export default function AppShell({ children, hideNav = false }: { children: ReactNode; hideNav?: boolean }) {
+export default function AppShell({
+  children,
+  hideNav = false,
+}: {
+  children: ReactNode;
+  hideNav?: boolean;
+}) {
   return (
-    <div className="min-h-screen w-full bg-secondary/30 flex justify-center overflow-x-hidden">
-      <div className="app-shell sm:shadow-elevated overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[#eef3ec] flex justify-center overflow-x-hidden">
+      <main className="w-full max-w-[430px] min-h-screen bg-white overflow-x-hidden relative shadow-xl">
         <div className={hideNav ? "" : "pb-36"}>{children}</div>
         {!hideNav && <BottomNav />}
-      </div>
+      </main>
     </div>
   );
 }
