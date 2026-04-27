@@ -48,6 +48,29 @@ export default function Profile() {
         </div>
       </header>
 
+      {justSaved && (
+        <section className="px-5 mt-4">
+          <div className="rounded-2xl border border-primary/30 bg-primary/10 p-3.5 flex items-start gap-3 fade-in">
+            <span className="h-9 w-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-5 w-5" />
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-primary">Account saved to database</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Hi <span className="font-bold text-foreground">{name}</span> — your profile is live and now showing here.
+              </p>
+            </div>
+            <button
+              onClick={() => setJustSaved(false)}
+              className="h-7 w-7 rounded-lg hover:bg-primary/15 text-primary flex items-center justify-center shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Stats */}
       <section className="px-5 mt-4">
         <div className="grid grid-cols-2 gap-3">
