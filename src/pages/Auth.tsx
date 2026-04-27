@@ -62,7 +62,7 @@ export default function Auth() {
 
   return (
     <AppShell hideNav>
-      <div className="min-h-screen flex flex-col px-6 pt-12 pb-8 gradient-hero text-primary-foreground">
+      <div className="min-h-screen flex flex-col px-6 pt-10 pb-6 gradient-hero text-primary-foreground">
         <div className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-xl bg-white/20 flex items-center justify-center">
             <Recycle className="h-5 w-5" />
@@ -70,11 +70,11 @@ export default function Auth() {
           <div className="font-extrabold text-lg tracking-tight">Waste2Worth</div>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center fade-in">
-          <h1 className="text-3xl font-extrabold leading-tight">
+        <div className="mt-8 fade-in">
+          <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight">
             {mode === "signup" ? "Turn waste into worth" : "Welcome back"}
           </h1>
-          <p className="mt-2 text-white/85">
+          <p className="mt-2 text-sm sm:text-base text-white/85">
             {mode === "signup" ? "Create an account to start earning W2W coins." : "Sign in to continue earning."}
           </p>
 
