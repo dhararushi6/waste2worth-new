@@ -62,18 +62,21 @@ export default function Scan() {
     }, 1600);
   };
 
-  const deposit = () => {
-    w2wStore.addCoins(coins);
-    w2wStore.addKg(device.weight);
-    w2wStore.addRecent({
-      id: Date.now(),
-      title: `${device.name} (${cond.label})`,
-      subtitle: `${device.weight.toFixed(2)} kg · ${condition}% condition`,
-      coins,
-      when: "Just now",
-    });
-    toast.success(`+${coins} W2W coins added`);
-    navigate("/map");
+  const deposit = async () => {
+    try {
+      await w2wStore.addScan({
+        deviceId: device.id,
+        deviceName: device.name,
+        weightKg: device.weight,
+        conditionPct: condition,
+        conditionLabel: cond.label,
+        coinsEarned: coins,
+      });
+      toast.success(`+${coins} W2W coins added`);
+      navigate("/map");
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to save scan");
+    }
   };
   const pickup = () => {
     toast.success("Pickup request created");

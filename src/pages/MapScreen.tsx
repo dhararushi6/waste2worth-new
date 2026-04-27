@@ -125,8 +125,11 @@ export default function MapScreen() {
                     <Navigation className="h-4 w-4 mr-1" /> Get Directions
                   </Button>
                   <Button
-                    onClick={() => {
-                      w2wStore.addCoins(35);
+                    onClick={async () => {
+                      await w2wStore.addScan({
+                        deviceId: "kiosk-qr", deviceName: "Kiosk Drop", weightKg: 0.2,
+                        conditionPct: 70, conditionLabel: "Good", coinsEarned: 35,
+                      });
                       toast.success("+35 W2W coins credited (kiosk QR scanned)");
                       setActive(null);
                     }}

@@ -17,15 +17,13 @@ export default function Rewards() {
 
   const list = useMemo(() => rewards.filter((r) => r.cat === cat), [cat]);
 
-  const redeem = (r: typeof rewards[number]) => {
-    const ok = w2wStore.spendCoins(r.cost);
-    if (!ok) {
+  const redeem = async (r: typeof rewards[number]) => {
+    const code = await w2wStore.redeem(r.name, r.cost);
+    if (!code) {
       toast.error("Not enough W2W coins");
       setConfirm(null);
       return;
     }
-    const code = "W2W-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-    w2wStore.addCoupon({ id: code, rewardName: r.name, cost: r.cost, code, createdAt: Date.now() });
     setConfirm(null);
     setCoupon({ name: r.name, code });
   };
