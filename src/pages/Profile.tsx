@@ -1,10 +1,11 @@
 import AppShell from "@/components/w2w/AppShell";
 import { user, badges } from "@/lib/w2w-data";
-import { Settings, Bell, Shield, Share2, IdCard, Leaf, TreeDeciduous, Cloud, Flame, ChevronRight, Sparkles, Zap, Droplets, Smartphone, CheckCircle2 } from "lucide-react";
+import { Settings, Bell, Shield, Share2, IdCard, Leaf, TreeDeciduous, Cloud, Flame, ChevronRight, Sparkles, Zap, Droplets, Smartphone, CheckCircle2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useW2W, w2wStore } from "@/store/w2w-store";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
   const totalKg = useW2W((s) => s.totalKg);
