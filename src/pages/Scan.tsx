@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Sparkles, MapPin, Truck, X, ChevronDown } from "lucide-react";
+import { Camera, Sparkles, MapPin, Truck, X, ChevronDown, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -15,7 +15,7 @@ import CoinBadge from "@/components/w2w/CoinBadge";
 import { w2wStore } from "@/store/w2w-store";
 import { toast } from "sonner";
 
-// ---------- Device Catalogue ----------
+// ---------- Device Catalogue (including laptop) ----------
 const devices = [
   { id: "phone", name: "Smartphone", emoji: "📱", weight: 0.18, base: 850 },
   { id: "feature", name: "Feature Phone", emoji: "📞", weight: 0.10, base: 220 },
@@ -25,6 +25,7 @@ const devices = [
   { id: "fitband", name: "Fitness Band", emoji: "📿", weight: 0.03, base: 150 },
   { id: "powerbank", name: "Power Bank", emoji: "🔋", weight: 0.30, base: 260 },
   { id: "tablet", name: "Tablet / iPad", emoji: "📱", weight: 0.45, base: 1400 },
+  { id: "laptop", name: "Laptop / Notebook", emoji: "💻", weight: 2.0, base: 2500 },
   { id: "ereader", name: "E-Reader (Kindle)", emoji: "📖", weight: 0.20, base: 600 },
   { id: "camera", name: "Digital Camera", emoji: "📷", weight: 0.40, base: 900 },
   { id: "console", name: "Handheld Console", emoji: "🎮", weight: 0.35, base: 1100 },
@@ -42,47 +43,116 @@ const conditionFor = (v: number) => {
   return { label: "Dead / Scrap", mult: 0.15, tone: "text-destructive", desc: "Recycle for materials only" };
 };
 
+// Estimate condition from image sharpness (Laplacian variance)
+const estimateConditionFromImage = (imageData: ImageData): number => {
+  const data = imageData.data;
+  let sum = 0;
+  const width = imageData.width;
+  const height = imageData.height;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      const gx = 
+        -1 * data[idx - 4 - width*4] + 0 * data[idx - width*4] + 1 * data[idx + 4 - width*4] +
+        -2 * data[idx - 4] + 0 * data[idx] + 2 * data[idx + 4] +
+        -1 * data[idx - 4 + width*4] + 0 * data[idx + width*4] + 1 * data[idx + 4 + width*4];
+      const gy = 
+        -1 * data[idx - 4 - width*4] + -2 * data[idx - width*4] + -1 * data[idx + 4 - width*4] +
+        0 * data[idx - 4] + 0 * data[idx] + 0 * data[idx + 4] +
+        1 * data[idx - 4 + width*4] + 2 * data[idx + width*4] + 1 * data[idx + 4 + width*4];
+      const magnitude = Math.sqrt(gx*gx + gy*gy);
+      sum += magnitude;
+    }
+  }
+  const avgSharpness = sum / ((width-2)*(height-2));
+  let condition = Math.min(100, Math.max(0, Math.round((avgSharpness / 1200) * 100)));
+  // ensure integer, clamp
+  condition = Math.min(100, Math.max(0, condition));
+  return condition;
+};
+
 export default function Scan() {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [deviceId, setDeviceId] = useState<string>("phone");
   const [condition, setCondition] = useState<number>(70);
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
 
+  // AI state – lazy loaded
+  const [aiModel, setAiModel] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   const device = useMemo(() => devices.find((d) => d.id === deviceId)!, [deviceId]);
   const cond = conditionFor(condition);
   const coins = Math.round(device.base * cond.mult);
+
+  // Improved label mapping – gives priority to tablet over phone
+  const labelToDeviceId = (label: string): string => {
+    const l = label.toLowerCase();
+    if (l.includes("tablet") || l.includes("ipad") || (l.includes("pad") && !l.includes("phone"))) return "tablet";
+    if (l.includes("laptop") || l.includes("notebook") || l.includes("netbook")) return "laptop";
+    if (l.includes("smartphone") || l.includes("cellular") || l.includes("handset") || l.includes("iphone")) return "phone";
+    if (l.includes("camera")) return "camera";
+    if (l.includes("watch")) return "smartwatch";
+    if (l.includes("headphone") || l.includes("earbud")) return "earbuds";
+    if (l.includes("speaker")) return "speaker";
+    if (l.includes("console") || l.includes("gamepad")) return "console";
+    return "phone";
+  };
+
+  // Load AI only when user clicks the button – not on mount
+  const loadAI = async () => {
+    if (aiModel) return aiModel;
+    if (aiError) throw new Error(aiError);
+    setAiLoading(true);
+    try {
+      const tf = await import("@tensorflow/tfjs");
+      const mobilenet = await import("@tensorflow-models/mobilenet");
+      await tf.ready();
+      const model = await mobilenet.load();
+      setAiModel(model);
+      setAiError(null);
+      toast.success("AI model ready");
+      return model;
+    } catch (err: any) {
+      console.error(err);
+      setAiError(err.message || "Failed to load AI");
+      toast.error("AI unavailable – manual selection only");
+      throw err;
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Start camera on mount
   useEffect(() => {
     const startCamera = async () => {
       try {
         const media = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" }
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
         });
         setStream(media);
         if (videoRef.current) {
           videoRef.current.srcObject = media;
-          videoRef.current.play();
+          await videoRef.current.play();
         }
       } catch (err) {
         toast.error("Camera permission denied");
       }
     };
     startCamera();
-
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      if (stream) stream.getTracks().forEach(t => t.stop());
     };
   }, []);
 
   const stopCamera = () => {
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(t => t.stop());
       setStream(null);
     }
   };
@@ -120,7 +190,6 @@ export default function Scan() {
 
   const resetScan = () => {
     setScanned(false);
-    // Restart camera
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then(media => {
         setStream(media);
@@ -132,8 +201,56 @@ export default function Scan() {
       .catch(() => toast.error("Could not restart camera"));
   };
 
+  // Auto detect: sets device type AND condition percentage from image
+  const autoDetect = async () => {
+    try {
+      const model = await loadAI();
+      if (!videoRef.current || !canvasRef.current || !stream) {
+        toast.error("Camera not ready");
+        return;
+      }
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas error");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // 1. Get image data for condition estimation
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const conditionScore = estimateConditionFromImage(imageData);
+      setCondition(conditionScore);
+      
+      // 2. Run classification for device type
+      const predictions = await model.classify(canvas, 3);
+      let bestId: string | null = null;
+      let bestConfidence = 0;
+      for (const pred of predictions) {
+        const mapped = labelToDeviceId(pred.className);
+        if (mapped && pred.probability > bestConfidence) {
+          bestId = mapped;
+          bestConfidence = pred.probability;
+        }
+      }
+      if (bestId && bestConfidence > 0.2) {
+        const detectedDevice = devices.find(d => d.id === bestId);
+        setDeviceId(bestId);
+        toast.success(`Detected: ${detectedDevice?.name} (${Math.round(bestConfidence*100)}% confidence)\nCondition: ${conditionScore}%`);
+      } else {
+        toast.warning(`Could not identify device, but condition set to ${conditionScore}%`);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Detection failed");
+    }
+  };
+
   return (
     <AppShell>
+      <canvas ref={canvasRef} className="hidden" />
+
       {/* Camera viewfinder */}
       <div className="relative h-[42vh] bg-black overflow-hidden">
         <video
@@ -165,10 +282,7 @@ export default function Scan() {
         </div>
 
         <div className="absolute top-0 inset-x-0 px-5 pt-12 flex items-center justify-between text-white">
-          <button
-            onClick={() => navigate(-1)}
-            className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center backdrop-blur"
-          >
+          <button onClick={() => navigate(-1)} className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center backdrop-blur">
             <X className="h-5 w-5" />
           </button>
           <p className="text-sm font-semibold">AI Device Scanner</p>
@@ -177,18 +291,32 @@ export default function Scan() {
 
         {!scanned && !scanning && (
           <p className="absolute bottom-4 inset-x-0 text-center text-white/85 text-xs px-8">
-            Point camera at device, then tap to scan
+            Point camera at device → tap 🤖 Auto Detect
           </p>
         )}
       </div>
 
       {/* Controls */}
       <div className="px-5 -mt-4 space-y-4">
-        {/* Device selector */}
         <div className="rounded-2xl bg-card border border-border shadow-elevated p-4">
-          <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            Select portable device
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              Select portable device
+            </label>
+            <Button
+              onClick={autoDetect}
+              disabled={aiLoading}
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1"
+            >
+              <Brain className="h-3 w-3" />
+              {aiLoading ? "Loading AI..." : "🤖 Auto Detect"}
+            </Button>
+          </div>
+          {aiError && (
+            <div className="text-[10px] text-red-500 mb-2">AI unavailable – manual only</div>
+          )}
           <Select value={deviceId} onValueChange={(v) => { setDeviceId(v); setScanned(false); }}>
             <SelectTrigger className="mt-2 h-12 rounded-xl border-border bg-card-muted font-bold text-sm">
               <SelectValue />
@@ -223,11 +351,7 @@ export default function Scan() {
               onValueChange={(v) => { setCondition(v[0]); setScanned(false); }}
             />
             <div className="mt-1 flex justify-between text-[10px] text-muted-foreground font-semibold">
-              <span>Scrap</span>
-              <span>Faulty</span>
-              <span>Fair</span>
-              <span>Good</span>
-              <span>New</span>
+              <span>Scrap</span><span>Faulty</span><span>Fair</span><span>Good</span><span>New</span>
             </div>
             <p className="mt-2 text-[11px] text-muted-foreground">{cond.desc}</p>
           </div>
@@ -244,7 +368,7 @@ export default function Scan() {
               <Camera className="h-8 w-8 text-primary" />
             </button>
             <p className="mt-3 text-xs text-muted-foreground font-semibold">
-              {scanning ? "Analyzing with AI…" : "Tap to scan & estimate value"}
+              {scanning ? "Analyzing…" : "Tap to confirm & earn coins"}
             </p>
           </div>
         ) : (
@@ -264,31 +388,19 @@ export default function Scan() {
               </div>
               <CoinBadge />
             </div>
-
             <div className="mt-4 grid grid-cols-2 gap-3">
               <Stat label="Condition score" value={`${condition}%`} />
               <Stat label="You'll earn" value={`+${coins} W2W`} accent />
             </div>
-
             <div className="mt-5 grid grid-cols-2 gap-3">
-              <Button
-                onClick={deposit}
-                className="h-12 rounded-xl bg-deep-blue text-deep-blue-foreground hover:bg-deep-blue/90 font-bold"
-              >
+              <Button onClick={deposit} className="h-12 rounded-xl bg-deep-blue text-deep-blue-foreground hover:bg-deep-blue/90 font-bold">
                 <MapPin className="h-4 w-4 mr-1" /> Deposit at Kiosk
               </Button>
-              <Button
-                onClick={pickup}
-                className="h-12 rounded-xl bg-olive text-olive-foreground hover:bg-olive/90 font-bold"
-              >
+              <Button onClick={pickup} className="h-12 rounded-xl bg-olive text-olive-foreground hover:bg-olive/90 font-bold">
                 <Truck className="h-4 w-4 mr-1" /> Request Pickup
               </Button>
             </div>
-
-            <button
-              onClick={resetScan}
-              className="mt-3 w-full text-xs text-muted-foreground font-semibold py-2"
-            >
+            <button onClick={resetScan} className="mt-3 w-full text-xs text-muted-foreground font-semibold py-2">
               Scan another device
             </button>
           </div>
