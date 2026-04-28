@@ -8,6 +8,9 @@ import {
   Truck,
   MapPin,
   Trophy,
+  X,
+  Building2,
+  Store,
 } from "lucide-react";
 
 import AppShell from "@/components/w2w/AppShell";
@@ -22,6 +25,16 @@ export default function Home() {
   const [name, setName] = useState("User");
   const [streak] = useState(0);
   const [showAll, setShowAll] = useState(false);
+
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  const [showDonateModal, setShowDonateModal] = useState(false);
+  const [selectedOrg, setSelectedOrg] = useState<string | null>(null);
+
+  const addNotification = (msg: string) => {
+    setNotifications((prev) => [msg, ...prev]);
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -39,16 +52,34 @@ export default function Home() {
 
       if (error) {
         setName(user.email?.split("@")[0] || "User");
-        return;
+      } else {
+        setName(data?.name || "User");
       }
 
-      setName(data?.name || "User");
+      addNotification("👋 Welcome back to Waste2Worth!");
+      addNotification("♻️ Scan your e-waste to earn W2W coins.");
+      addNotification("🚚 Book a pickup for old devices.");
     };
 
     loadProfile();
   }, []);
 
   const userInitial = name.charAt(0).toUpperCase();
+
+  const organizations = [
+    {
+      name: "Green Hope Foundation",
+      desc: "Donates refurbished devices to students.",
+    },
+    {
+      name: "Digital Shiksha Trust",
+      desc: "Supports rural learning with reused electronics.",
+    },
+    {
+      name: "EcoTech Recycling NGO",
+      desc: "Repairs and responsibly recycles unusable devices.",
+    },
+  ];
 
   const ewasteRates = [
     { type: "Smartphone", rate: 400, unit: "device" },
@@ -83,20 +114,6 @@ export default function Home() {
           coins: 35,
           when: "2 days ago",
         },
-        {
-          id: 4,
-          title: "Tablet recycled",
-          subtitle: "E-waste · 0.45 kg · Good condition",
-          coins: 210,
-          when: "3 days ago",
-        },
-        {
-          id: 5,
-          title: "Power bank submitted",
-          subtitle: "Battery waste · 0.30 kg · Safe handling",
-          coins: 80,
-          when: "4 days ago",
-        },
       ];
 
   const actions = [
@@ -104,25 +121,28 @@ export default function Home() {
       label: "Sell E-Waste",
       icon: Recycle,
       color: "bg-olive text-olive-foreground",
-      to: "/scan",
+      onClick: () => navigate("/scan"),
     },
     {
       label: "Donate Device",
       icon: HandHeart,
       color: "bg-gold text-gold-foreground",
-      to: "/pickup",
+      onClick: () => {
+        setSelectedOrg(null);
+        setShowDonateModal(true);
+      },
     },
     {
       label: "Book E-Waste Pickup",
       icon: Truck,
       color: "bg-olive text-olive-foreground",
-      to: "/pickup",
+      onClick: () => navigate("/pickup"),
     },
     {
       label: "Find E-Waste Center",
       icon: MapPin,
       color: "bg-deep-blue text-deep-blue-foreground",
-      to: "/map",
+      onClick: () => navigate("/map"),
     },
   ];
 
@@ -139,9 +159,37 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25">
-                <Bell className="h-5 w-5" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 relative"
+                >
+                  <Bell className="h-5 w-5" />
+
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] h-4 w-4 rounded-full flex items-center justify-center">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-3 w-64 bg-white text-black rounded-xl shadow-lg p-3 z-50">
+                    <h3 className="font-bold mb-2 text-sm">Notifications</h3>
+
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {notifications.map((n, i) => (
+                        <div
+                          key={i}
+                          className="text-xs bg-gray-100 p-2 rounded-lg"
+                        >
+                          {n}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <button
                 onClick={() => navigate("/profile")}
@@ -170,7 +218,7 @@ export default function Home() {
             {actions.map((a) => (
               <button
                 key={a.label}
-                onClick={() => navigate(a.to)}
+                onClick={a.onClick}
                 className="rounded-2xl bg-card border border-border p-4 shadow-card text-left hover:scale-[1.01] transition active:scale-[0.99]"
               >
                 <span
@@ -278,6 +326,90 @@ export default function Home() {
             ))}
           </div>
         </section>
+
+        {showDonateModal && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center px-4">
+            <div className="w-full max-w-md bg-background rounded-t-3xl sm:rounded-3xl p-5 shadow-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-extrabold">Donate Device</h2>
+                  <p className="text-xs text-muted-foreground">
+                    Choose an organization first
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowDonateModal(false)}
+                  className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {organizations.map((org) => (
+                  <button
+                    key={org.name}
+                    onClick={() => {
+                      setSelectedOrg(org.name);
+                      addNotification(`💚 Selected ${org.name} for donation.`);
+                    }}
+                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                      selectedOrg === org.name
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-card"
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      <span className="h-10 w-10 rounded-xl bg-gold text-gold-foreground flex items-center justify-center">
+                        <Building2 className="h-5 w-5" />
+                      </span>
+
+                      <div>
+                        <p className="text-sm font-bold">{org.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {org.desc}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {selectedOrg && (
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      addNotification(
+                        `🚚 Pickup selected for donation to ${selectedOrg}.`
+                      );
+                      setShowDonateModal(false);
+                      navigate("/pickup");
+                    }}
+                    className="rounded-2xl bg-primary text-primary-foreground p-4 font-bold text-sm flex flex-col items-center gap-2"
+                  >
+                    <Truck className="h-5 w-5" />
+                    Book Pickup
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      addNotification(
+                        `🏪 Kiosk drop selected for donation to ${selectedOrg}.`
+                      );
+                      setShowDonateModal(false);
+                      navigate("/map");
+                    }}
+                    className="rounded-2xl bg-card border border-border p-4 font-bold text-sm flex flex-col items-center gap-2"
+                  >
+                    <Store className="h-5 w-5" />
+                    Kiosk Drop
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

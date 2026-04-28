@@ -20,7 +20,7 @@ export default function Auth() {
       if (data.session) navigate("/home", { replace: true });
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) navigate("/home", { replace: true });
     });
 
@@ -29,7 +29,8 @@ export default function Auth() {
 
   const submit = async () => {
     if (!email || password.length < 6) {
-      return toast.error("Enter email & 6+ char password");
+      toast.error("Enter email and 6+ character password");
+      return;
     }
 
     setLoading(true);
@@ -41,7 +42,9 @@ export default function Auth() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/home`,
-            data: { name: name || email.split("@")[0] },
+            data: {
+              name: name || email.split("@")[0],
+            },
           },
         });
 
@@ -71,15 +74,6 @@ export default function Auth() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const google = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/home` },
-    });
-
-    if (error) toast.error(error.message);
   };
 
   return (
@@ -152,15 +146,6 @@ export default function Auth() {
               ? "Create account"
               : "Sign in"}
             <ChevronRight className="ml-1 h-5 w-5" />
-          </Button>
-
-          <Button
-            onClick={google}
-            variant="outline"
-            size="lg"
-            className="w-full h-12 rounded-2xl bg-white/10 border-white/30 text-white hover:bg-white/20 font-bold"
-          >
-            Continue with Google
           </Button>
 
           <button
