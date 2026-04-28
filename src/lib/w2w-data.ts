@@ -99,15 +99,16 @@ export const challenges = {
   progress: 64,
 };
 
+// Workshops with string IDs (matching what will be stored in Supabase)
 export const workshops = [
-  { id: 1, title: "Trash to Treasure", date: "May 04", time: "4:00 PM", location: "Open Air Theatre", tag: "Workshop" },
-  { id: 2, title: "Repair Cafe", date: "May 11", time: "11:00 AM", location: "Maker Lab", tag: "Hands-on" },
-  { id: 3, title: "Swachh Campus Challenge", date: "May 18", time: "9:00 AM", location: "Main Quad", tag: "Challenge" },
+  { id: "trash-to-treasure", title: "Trash to Treasure", date: "May 04", time: "4:00 PM", location: "Open Air Theatre", tag: "Workshop" },
+  { id: "repair-cafe", title: "Repair Cafe", date: "May 11", time: "11:00 AM", location: "Maker Lab", tag: "Hands-on" },
+  { id: "swachh-campus", title: "Swachh Campus Challenge", date: "May 18", time: "9:00 AM", location: "Main Quad", tag: "Challenge" },
 ];
 
 export const pastWorkshops = [
-  { id: 1, title: "E-waste 101", date: "Mar 12", certificate: true },
-  { id: 2, title: "Compost Crew", date: "Feb 22", certificate: true },
+  { id: "ewaste-101", title: "E-waste 101", date: "Mar 12", certificate: true },
+  { id: "compost-crew", title: "Compost Crew", date: "Feb 22", certificate: true },
 ];
 
 export const badges = [

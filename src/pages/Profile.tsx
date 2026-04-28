@@ -168,13 +168,16 @@ export default function Profile() {
         </div>
       </section>
 
-      {/* Workshops shortcut */}
+      {/* Workshops shortcut - only one button now */}
       <section className="px-5 mt-6">
-        <button onClick={() => navigate("/workshops")} className="w-full rounded-2xl bg-card border border-border p-4 shadow-card flex items-center gap-3 text-left">
-          <span className="h-10 w-10 rounded-xl bg-gold/20 text-gold flex items-center justify-center">🛠️</span>
+        <button
+          onClick={() => navigate("/workshops")}
+          className="w-full rounded-2xl bg-card border border-border p-4 shadow-card flex items-center gap-3 text-left"
+        >
+          <span className="h-10 w-10 rounded-xl bg-gold/20 text-gold flex items-center justify-center text-xl">🛠️</span>
           <div className="flex-1">
             <p className="text-sm font-bold">Workshop Hub</p>
-            <p className="text-xs text-muted-foreground">Trash to Treasure, Repair Cafe & more</p>
+            <p className="text-xs text-muted-foreground">Your workshops & upcoming events</p>
           </div>
           <ChevronRight className="h-4 w-4 text-muted-foreground" />
         </button>

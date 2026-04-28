@@ -119,7 +119,12 @@ export default function MapScreen() {
 
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <Button
-                    onClick={() => { toast.success("Opening directions…"); }}
+                    onClick={() => { 
+                      // Minimal change: Open external maps using kiosk name/approx location
+                      const query = encodeURIComponent(`${active.name} recycling kiosk`);
+                      window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+                      toast.success("Opening directions…"); 
+                    }}
                     className="h-12 rounded-xl bg-deep-blue text-deep-blue-foreground hover:bg-deep-blue/90 font-bold"
                   >
                     <Navigation className="h-4 w-4 mr-1" /> Get Directions

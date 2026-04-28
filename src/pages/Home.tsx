@@ -21,6 +21,7 @@ export default function Home() {
 
   const [name, setName] = useState("User");
   const [streak] = useState(0);
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -81,6 +82,20 @@ export default function Home() {
           subtitle: "Accessories · 0.35 kg",
           coins: 35,
           when: "2 days ago",
+        },
+        {
+          id: 4,
+          title: "Tablet recycled",
+          subtitle: "E-waste · 0.45 kg · Good condition",
+          coins: 210,
+          when: "3 days ago",
+        },
+        {
+          id: 5,
+          title: "Power bank submitted",
+          subtitle: "Battery waste · 0.30 kg · Safe handling",
+          coins: 80,
+          when: "4 days ago",
         },
       ];
 
@@ -212,7 +227,10 @@ export default function Home() {
                 </p>
 
                 <div className="mt-3 h-2 rounded-full bg-card overflow-hidden">
-                  <div className="h-full gradient-hero" style={{ width: "68%" }} />
+                  <div
+                    className="h-full gradient-hero"
+                    style={{ width: "68%" }}
+                  />
                 </div>
 
                 <p className="mt-1.5 text-[11px] text-muted-foreground">
@@ -227,13 +245,17 @@ export default function Home() {
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-bold">Recent E-Waste activity</h2>
 
-            <button className="text-xs font-semibold text-primary inline-flex items-center">
-              View all <ChevronRight className="h-3 w-3" />
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs font-semibold text-primary inline-flex items-center"
+            >
+              {showAll ? "Show less" : "View all"}{" "}
+              <ChevronRight className="h-3 w-3" />
             </button>
           </div>
 
           <div className="space-y-2">
-            {recentList.slice(0, 3).map((r) => (
+            {(showAll ? recentList : recentList.slice(0, 3)).map((r) => (
               <div
                 key={r.id}
                 className="rounded-2xl bg-card border border-border p-3.5 shadow-card flex items-center gap-3"

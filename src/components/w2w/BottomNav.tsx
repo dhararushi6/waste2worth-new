@@ -1,12 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, ScanLine, Map as MapIcon, Gift, User, Plus, X, Camera, Truck, AlertTriangle } from "lucide-react";
+import { Home, ScanLine, Gift, User, Clock, Plus, X, Camera, Truck, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/home", label: "Home", icon: Home },
   { to: "/scan", label: "Scan", icon: ScanLine },
-  { to: "/map", label: "Map", icon: MapIcon },
+  { to: "/history", label: "History", icon: Clock },  // Clock works in all versions
   { to: "/rewards", label: "Rewards", icon: Gift },
   { to: "/profile", label: "Profile", icon: User },
 ];
