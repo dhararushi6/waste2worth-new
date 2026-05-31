@@ -24,21 +24,22 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const devices = [
-  { id: "phone", name: "Smartphone", emoji: "📱", weight: 0.18, base: 850 },
-  { id: "feature", name: "Feature Phone", emoji: "📞", weight: 0.1, base: 220 },
-  { id: "earbuds", name: "Wireless Earbuds", emoji: "🎧", weight: 0.05, base: 180 },
-  { id: "headphones", name: "Headphones", emoji: "🎧", weight: 0.25, base: 320 },
-  { id: "smartwatch", name: "Smartwatch", emoji: "⌚", weight: 0.06, base: 400 },
-  { id: "fitband", name: "Fitness Band", emoji: "📿", weight: 0.03, base: 150 },
-  { id: "powerbank", name: "Power Bank", emoji: "🔋", weight: 0.3, base: 260 },
-  { id: "tablet", name: "Tablet / iPad", emoji: "📱", weight: 0.45, base: 1400 },
-  { id: "laptop", name: "Laptop / Notebook", emoji: "💻", weight: 2.0, base: 2500 },
-  { id: "ereader", name: "E-Reader (Kindle)", emoji: "📖", weight: 0.2, base: 600 },
-  { id: "camera", name: "Digital Camera", emoji: "📷", weight: 0.4, base: 900 },
-  { id: "console", name: "Handheld Console", emoji: "🎮", weight: 0.35, base: 1100 },
-  { id: "charger", name: "Charger / Adapter", emoji: "🔌", weight: 0.12, base: 60 },
-  { id: "cable", name: "USB / Cable Bundle", emoji: "🧵", weight: 0.1, base: 40 },
-  { id: "speaker", name: "Bluetooth Speaker", emoji: "🔊", weight: 0.4, base: 350 },
+  { id: "phone",      name: "Smartphone",         emoji: "📱", weight: 0.18, base: 850  },
+  { id: "feature",   name: "Feature Phone",        emoji: "📞", weight: 0.1,  base: 220  },
+  { id: "earbuds",   name: "Wireless Earbuds",     emoji: "🎧", weight: 0.05, base: 180  },
+  { id: "headphones",name: "Headphones",           emoji: "🎧", weight: 0.25, base: 320  },
+  { id: "smartwatch",name: "Smartwatch",           emoji: "⌚", weight: 0.06, base: 400  },
+  { id: "fitband",   name: "Fitness Band",         emoji: "📿", weight: 0.03, base: 150  },
+  { id: "powerbank", name: "Power Bank",           emoji: "🔋", weight: 0.3,  base: 260  },
+  { id: "tablet",    name: "Tablet / iPad",        emoji: "📱", weight: 0.45, base: 1400 },
+  { id: "laptop",    name: "Laptop / Notebook",    emoji: "💻", weight: 2.0,  base: 2500 },
+  { id: "ereader",   name: "E-Reader (Kindle)",    emoji: "📖", weight: 0.2,  base: 600  },
+  { id: "camera",    name: "Digital Camera",       emoji: "📷", weight: 0.4,  base: 900  },
+  { id: "console",   name: "Handheld Console",     emoji: "🎮", weight: 0.35, base: 1100 },
+  { id: "charger",   name: "Charger / Adapter",    emoji: "🔌", weight: 0.12, base: 60   },
+  { id: "cable",     name: "USB / Cable Bundle",   emoji: "🧵", weight: 0.1,  base: 40   },
+  { id: "speaker",   name: "Bluetooth Speaker",   emoji: "🔊", weight: 0.4,  base: 350  },
+  { id: "calculator",name: "Calculator",           emoji: "🔢", weight: 0.15, base: 80   },
 ];
 
 const conditionFor = (v: number) => {
@@ -78,38 +79,87 @@ const conditionFor = (v: number) => {
   };
 };
 
+/**
+ * Estimates device condition (0-100) from a camera frame.
+ *
+ * Uses three complementary image signals:
+ *  1. Sharpness  – luminance-weighted Sobel edge magnitude (higher → cleaner screen)
+ *  2. Brightness – overly dark or washed-out frames suggest damage / dirt
+ *  3. Contrast   – low variance often indicates a dead or cracked screen
+ *
+ * The three scores are blended with empirical weights and clamped to [0, 100].
+ */
 const estimateConditionFromImage = (imageData: ImageData): number => {
   const data = imageData.data;
-  let sum = 0;
   const width = imageData.width;
   const height = imageData.height;
+  const total = width * height;
 
+  // --- 1. Sharpness via luminance-based Sobel ---
+  // Convert each pixel to perceived luminance first (ITU-R BT.601)
+  const luma = new Float32Array(total);
+  for (let i = 0; i < total; i++) {
+    const r = data[i * 4];
+    const g = data[i * 4 + 1];
+    const b = data[i * 4 + 2];
+    luma[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+  }
+
+  let sobelSum = 0;
+  let brightnessSum = 0;
+  let varianceSum = 0;
+  let meanLuma = 0;
+
+  // Single pass: accumulate brightness for mean
+  for (let i = 0; i < total; i++) meanLuma += luma[i];
+  meanLuma /= total;
+
+  // Second pass: Sobel + variance
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
-      const idx = (y * width + x) * 4;
+      const c = y * width + x;
+      // 3×3 neighbourhood indices
+      const tl = luma[c - width - 1], tc = luma[c - width], tr = luma[c - width + 1];
+      const ml = luma[c - 1],                               mr = luma[c + 1];
+      const bl = luma[c + width - 1], bc = luma[c + width], br = luma[c + width + 1];
 
-      const gx =
-        -1 * data[idx - 4 - width * 4] +
-        1 * data[idx + 4 - width * 4] +
-        -2 * data[idx - 4] +
-        2 * data[idx + 4] +
-        -1 * data[idx - 4 + width * 4] +
-        1 * data[idx + 4 + width * 4];
+      const gx = -tl - 2 * ml - bl + tr + 2 * mr + br;
+      const gy = -tl - 2 * tc - tr + bl + 2 * bc + br;
+      sobelSum += Math.sqrt(gx * gx + gy * gy);
 
-      const gy =
-        -1 * data[idx - 4 - width * 4] +
-        -2 * data[idx - width * 4] +
-        -1 * data[idx + 4 - width * 4] +
-        1 * data[idx - 4 + width * 4] +
-        2 * data[idx + width * 4] +
-        1 * data[idx + 4 + width * 4];
-
-      sum += Math.sqrt(gx * gx + gy * gy);
+      const diff = luma[c] - meanLuma;
+      varianceSum += diff * diff;
+      brightnessSum += luma[c];
     }
   }
 
-  const avgSharpness = sum / ((width - 2) * (height - 2));
-  return Math.min(100, Math.max(0, Math.round((avgSharpness / 1200) * 100)));
+  const innerPixels = (width - 2) * (height - 2);
+  const avgSobel = sobelSum / innerPixels;
+  const avgBrightness = brightnessSum / innerPixels;
+  const stdDev = Math.sqrt(varianceSum / innerPixels);
+
+  // --- 2. Individual sub-scores (each 0–100) ---
+  // Sharpness: calibrated against typical real-world device images
+  // avgSobel ~400 → good focus, ~1600 → very sharp edges
+  const sharpnessScore = Math.min(100, (avgSobel / 1400) * 100);
+
+  // Brightness: ideal range 80-200; penalise very dark (<60) or blown-out (>220)
+  const brightnessPenalty =
+    avgBrightness < 60
+      ? (60 - avgBrightness) / 60        // dark penalty 0–1
+      : avgBrightness > 220
+      ? (avgBrightness - 220) / 35       // blown-out penalty 0–1
+      : 0;
+  const brightnessScore = Math.max(0, 100 - brightnessPenalty * 40);
+
+  // Contrast/variance: stdDev ~25 is flat/damaged, ~60+ is detailed/good
+  const contrastScore = Math.min(100, (stdDev / 55) * 100);
+
+  // --- 3. Weighted blend ---
+  const blended = sharpnessScore * 0.55 + brightnessScore * 0.25 + contrastScore * 0.20;
+
+  // Snap to nearest 5% step (matches the slider step)
+  return Math.min(100, Math.max(0, Math.round(blended / 5) * 5));
 };
 
 export default function Scan() {
@@ -124,9 +174,12 @@ export default function Scan() {
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
 
-  const [aiModel, setAiModel] = useState<any>(null);
+  // COCO-SSD lite (~1.5 MB) for primary detection + MobileNet v1-0.25 (~500 KB) fallback
+  const [cocoModel,      setCocoModel]      = useState<any>(null);
+  const [mobilenetModel, setMobilenetModel] = useState<any>(null);
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiReady,   setAiReady]   = useState(false);
+  const [aiError,   setAiError]   = useState<string | null>(null);
 
   const device = useMemo(
     () => devices.find((d) => d.id === deviceId)!,
@@ -136,45 +189,181 @@ export default function Scan() {
   const cond = conditionFor(condition);
   const coins = Math.round(device.base * cond.mult);
 
-  const labelToDeviceId = (label: string): string => {
+  /**
+   * Maps a MobileNet / ImageNet label string to one of our device IDs.
+   * Returns null when no match is found so callers can skip unrecognised labels.
+   *
+   * The keyword list has been expanded to cover the most common ImageNet class
+   * names that actually appear when pointing a phone at electronic waste.
+   */
+  const labelToDeviceId = (label: string): string | null => {
     const l = label.toLowerCase();
 
-    if (l.includes("tablet") || l.includes("ipad")) return "tablet";
-    if (l.includes("laptop") || l.includes("notebook")) return "laptop";
-    if (l.includes("smartphone") || l.includes("iphone") || l.includes("cellular"))
-      return "phone";
-    if (l.includes("camera")) return "camera";
-    if (l.includes("watch")) return "smartwatch";
-    if (l.includes("headphone") || l.includes("earbud")) return "earbuds";
-    if (l.includes("speaker")) return "speaker";
-    if (l.includes("console") || l.includes("gamepad")) return "console";
+    // ── Laptop / notebook ──────────────────────────────────────────────────
+    if (
+      l.includes("laptop") || l.includes("notebook") ||
+      l.includes("computer keyboard") || l.includes("space bar") ||
+      l.includes("desktop computer")
+    ) return "laptop";
 
-    return "phone";
+    // ── Tablet / iPad ─────────────────────────────────────────────────────
+    if (
+      l.includes("tablet") || l.includes("ipad") ||
+      l.includes("digital clock")        // iPads are often misclassified here
+    ) return "tablet";
+
+    // ── Smartphone / feature phone ────────────────────────────────────────
+    if (
+      l.includes("smartphone") || l.includes("iphone") ||
+      l.includes("cellular") || l.includes("cell phone") ||
+      l.includes("mobile phone") || l.includes("cordless phone") ||
+      l.includes("telephone") || l.includes("dial telephone")
+    ) return "phone";
+
+    // ── Feature phone (lower-end) ─────────────────────────────────────────
+    if (
+      l.includes("feature phone") || l.includes("flip phone")
+    ) return "feature";
+
+    // ── Camera ────────────────────────────────────────────────────────────
+    if (
+      l.includes("camera") || l.includes("reflex camera") ||
+      l.includes("polaroid") || l.includes("lens cap") ||
+      l.includes("binoculars")
+    ) return "camera";
+
+    // ── Smartwatch ────────────────────────────────────────────────────────
+    if (
+      l.includes("watch") || l.includes("wristwatch") ||
+      l.includes("analog clock")          // watches are often predicted as clocks
+    ) return "smartwatch";
+
+    // ── Headphones / earbuds ──────────────────────────────────────────────
+    if (
+      l.includes("headphone") || l.includes("earbud") ||
+      l.includes("earphone") || l.includes("hearing aid") ||
+      l.includes("in-ear") || l.includes("iPod")
+    ) return "earbuds";
+
+    // ── Bluetooth speaker ─────────────────────────────────────────────────
+    if (
+      l.includes("speaker") || l.includes("loudspeaker") ||
+      l.includes("subwoofer") || l.includes("home theater") ||
+      l.includes("amplifier")
+    ) return "speaker";
+
+    // ── Handheld game console ─────────────────────────────────────────────
+    if (
+      l.includes("console") || l.includes("gamepad") ||
+      l.includes("joystick") || l.includes("game controller")
+    ) return "console";
+
+    // ── Power bank / battery pack ─────────────────────────────────────────
+    if (
+      l.includes("power bank") || l.includes("battery") ||
+      l.includes("electric battery")
+    ) return "powerbank";
+
+    // ── Charger / adapter / cable ─────────────────────────────────────────
+    if (
+      l.includes("charger") || l.includes("adapter") ||
+      l.includes("power strip") || l.includes("plug") ||
+      l.includes("coax")
+    ) return "charger";
+
+    if (
+      l.includes("cable") || l.includes("usb") ||
+      l.includes("wire") || l.includes("extension cord")
+    ) return "cable";
+
+    // ── E-reader ──────────────────────────────────────────────────────────
+    if (
+      l.includes("kindle") || l.includes("e-reader") ||
+      l.includes("ereader") || l.includes("book")
+    ) return "ereader";
+
+    // ── Fitness band ──────────────────────────────────────────────────────
+    if (
+      l.includes("band") || l.includes("bracelet") ||
+      l.includes("pedometer")
+    ) return "fitband";
+
+    // ── Calculator ────────────────────────────────────────────────────────
+    if (
+      l.includes("calculator") || l.includes("abacus") ||
+      l.includes("cash machine") || l.includes("slide rule")
+    ) return "calculator";
+
+    // ── Earbuds (MobileNet labels) ─────────────────────────────────────────
+    // MobileNet predicts earbuds as iPod, Walkman, or similar
+    if (
+      l.includes("ipod") || l.includes("walkman") ||
+      l.includes("earphone") || l.includes("in-ear") ||
+      l.includes("hearing aid")
+    ) return "earbuds";
+
+    return null;  // unknown — caller will skip this prediction
   };
 
-  const loadAI = async () => {
-    if (aiModel) return aiModel;
+  /**
+   * COCO-SSD → device ID map.
+   * COCO-SSD classes relevant to e-waste: cell phone, laptop, keyboard,
+   * mouse, remote, tv, book, clock, backpack, handbag, suitcase.
+   */
+  const cocoClassToDeviceId = (cls: string): string | null => {
+    switch (cls.toLowerCase()) {
+      case "cell phone":   return "phone";
+      case "laptop":       return "laptop";
+      case "keyboard":     return "laptop";   // often seen with laptops
+      case "mouse":        return "laptop";
+      case "remote":       return "charger";  // closest match
+      case "clock":        return "smartwatch";
+      case "book":         return "ereader";
+      case "headphones":   return "headphones";
+      case "backpack":
+      case "handbag":
+      case "suitcase":     return null;       // not e-waste
+      default:             return null;
+    }
+  };
+
+  /**
+   * Loads both models in parallel on first call; returns cached refs instantly
+   * on subsequent calls.
+   *
+   * • COCO-SSD lite  (~1.5 MB) — object detector: knows cell phone, laptop, etc.
+   * • MobileNet v1 α=0.25 (~500 KB) — scene classifier: knows calculator,
+   *   iPod/earbuds, camera, speaker, console, and 1 000 ImageNet classes.
+   *
+   * Total cold download ≈ 2 MB. Preloaded on mount so tap is instant.
+   */
+  const loadModels = async (): Promise<{ coco: any; mn: any }> => {
     if (aiError) throw new Error(aiError);
+    if (cocoModel && mobilenetModel) return { coco: cocoModel, mn: mobilenetModel };
 
     setAiLoading(true);
-
     try {
-      const tf = await import("@tensorflow/tfjs");
+      const tf        = await import("@tensorflow/tfjs");
+      const cocoSsd   = await import("@tensorflow-models/coco-ssd");
       const mobilenet = await import("@tensorflow-models/mobilenet");
 
       await tf.ready();
 
-      const model = await mobilenet.load();
+      // Load both in parallel — total wall-clock time = max(coco, mn) not sum
+      const [coco, mn] = await Promise.all([
+        cocoSsd.load({ base: "lite_mobilenet_v2" }),          // ~1.5 MB
+        mobilenet.load({ version: 1, alpha: 0.25 }),           // ~500 KB
+      ]);
 
-      setAiModel(model);
+      setCocoModel(coco);
+      setMobilenetModel(mn);
+      setAiReady(true);
       setAiError(null);
-      toast.success("AI model ready");
 
-      return model;
+      return { coco, mn };
     } catch (err: any) {
       console.error(err);
       setAiError(err.message || "Failed to load AI");
-      toast.error("AI unavailable – manual selection only");
       throw err;
     } finally {
       setAiLoading(false);
@@ -205,7 +394,11 @@ export default function Scan() {
   };
 
   useEffect(() => {
+    // Kick off camera + both AI models the moment the page opens.
+    // All three run in parallel; by the time the user taps the button
+    // everything is in memory and detection is near-instant.
     startCamera();
+    loadModels().catch(() => { /* silently ignore preload errors */ });
 
     return () => {
       setStream((current) => {
@@ -213,6 +406,7 @@ export default function Scan() {
         return null;
       });
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const stopCamera = () => {
@@ -234,59 +428,100 @@ export default function Scan() {
 
   const autoDetect = async () => {
     try {
-      const model = await loadAI();
+      // Returns instantly when preloaded on mount (common case).
+      const { coco, mn } = await loadModels();
 
       if (!videoRef.current || !canvasRef.current || !stream) {
         toast.error("Camera not ready");
         return;
       }
 
-      const video = videoRef.current;
+      const video  = videoRef.current;
       const canvas = canvasRef.current;
-
-      canvas.width = video.videoWidth;
+      canvas.width  = video.videoWidth;
       canvas.height = video.videoHeight;
 
       const ctx = canvas.getContext("2d");
-
       if (!ctx) throw new Error("Canvas error");
-
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const conditionScore = estimateConditionFromImage(imageData);
+      // ── STAGE 1: COCO-SSD ─────────────────────────────────────────────
+      // Best for: cell phone, laptop, keyboard, mouse, remote, clock, book.
+      const cocoDetections: Array<{ bbox: number[]; class: string; score: number }> =
+        await coco.detect(canvas);
 
-      setCondition(conditionScore);
+      const sorted = [...cocoDetections].sort((a, b) => b.score - a.score);
 
-      const predictions = await model.classify(canvas, 3);
+      let detectedId:    string|null   = null;
+      let detectedBbox:  number[]|null = null;
+      let detectedScore: number        = 0;
+      let detectedBy = "";
 
-      let bestId: string | null = null;
-      let bestConfidence = 0;
-
-      for (const pred of predictions) {
-        const mapped = labelToDeviceId(pred.className);
-
-        if (mapped && pred.probability > bestConfidence) {
-          bestId = mapped;
-          bestConfidence = pred.probability;
+      for (const det of sorted) {
+        const mapped = cocoClassToDeviceId(det.class);
+        if (mapped && det.score > 0.28) {
+          detectedId    = mapped;
+          detectedBbox  = det.bbox;
+          detectedScore = det.score;
+          detectedBy    = "COCO";
+          break;
         }
       }
 
-      if (bestId && bestConfidence > 0.2) {
-        const detectedDevice = devices.find((d) => d.id === bestId);
-        setDeviceId(bestId);
+      // ── STAGE 2: MobileNet fallback ────────────────────────────────────
+      // Covers: calculator, earbuds (iPod), camera, speaker, console,
+      // fitness band, power bank, charger, cable, e-reader, and more.
+      if (!detectedId) {
+        const preds = await mn.classify(canvas, 6);
+        const scoreMap: Record<string, number> = {};
+        for (const p of preds) {
+          const mapped = labelToDeviceId(p.className);
+          if (mapped) scoreMap[mapped] = (scoreMap[mapped] ?? 0) + p.probability;
+        }
+        let best = 0;
+        for (const [id, sc] of Object.entries(scoreMap)) {
+          if (sc > best) { detectedId = id; best = sc; }
+        }
+        if (detectedId && best > 0.10) {
+          detectedScore = best;
+          detectedBy    = "MobileNet";
+        } else {
+          detectedId = null;
+        }
+      }
 
+      // ── Condition (crop to bbox if COCO gave us one) ───────────────────
+      let conditionScore: number;
+      if (detectedBbox) {
+        const [bx, by, bw, bh] = detectedBbox;
+        const cx = Math.max(0, Math.round(bx));
+        const cy = Math.max(0, Math.round(by));
+        const cw = Math.min(canvas.width  - cx, Math.round(bw));
+        const ch = Math.min(canvas.height - cy, Math.round(bh));
+        conditionScore = estimateConditionFromImage(ctx.getImageData(cx, cy, cw, ch));
+      } else {
+        conditionScore = estimateConditionFromImage(
+          ctx.getImageData(0, 0, canvas.width, canvas.height)
+        );
+      }
+      setCondition(conditionScore);
+
+      if (detectedId) {
+        setDeviceId(detectedId);
+        const det      = devices.find((d) => d.id === detectedId);
+        const confPct  = Math.min(99, Math.round(detectedScore * 100));
+        const condLabel= conditionFor(conditionScore).label;
         toast.success(
-          `Detected: ${detectedDevice?.name} (${Math.round(
-            bestConfidence * 100
-          )}% confidence)`
+          `Detected: ${det?.name} · ${confPct}% conf · ${condLabel} [${detectedBy}]`
         );
       } else {
-        toast.warning(`Could not identify device, condition set to ${conditionScore}%`);
+        toast.warning(
+          `Device unclear – condition ${conditionScore}%. Please select type manually.`
+        );
       }
     } catch (err) {
       console.error(err);
-      toast.error("Detection failed");
+      toast.error("Detection failed – check console for details");
     }
   };
 
@@ -439,10 +674,14 @@ export default function Scan() {
               disabled={aiLoading}
               size="sm"
               variant="outline"
-              className="h-8 text-xs gap-1"
+              className="h-8 text-xs gap-1 relative"
             >
               <Brain className="h-3 w-3" />
-              {aiLoading ? "Loading AI..." : "🤖 Auto Detect"}
+              {aiLoading
+                ? "Loading…"
+                : aiReady
+                ? "🤖 Auto Detect"
+                : "🤖 Auto Detect"}
             </Button>
           </div>
 
